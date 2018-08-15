@@ -22,7 +22,7 @@ import sys
 import traceback
 import bibtexparser
 
-from bibtexparser.customization import getnames
+from bibtexparser.customization import getnames, convert_to_unicode
 from biplist import PlistReader
 
 from flask import abort
@@ -111,6 +111,7 @@ def parse_journal(record):
 
 def process_record(record):
     """Generate custom record keys to be sent to the browser"""
+    record = convert_to_unicode(record)
     record = parse_authors(record)
     record = parse_pdf(record)
     record = parse_urls(record)
