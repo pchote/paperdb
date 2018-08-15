@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Papers list.">
+    <meta name="author" content="Paul Chote">
+    <meta charset="utf-8">
+    <title>Papers list</title>
+    <link href="http://fonts.googleapis.com/css?family=Roboto:300,400,500,700,400italic" rel="stylesheet">
+    <link href="{{ url_for('static', filename='toolkit-inverse.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='application.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.11.1/bootstrap-table.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.11.1/bootstrap-table.min.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <div id="toolbar" class="row">
+        <h1>Papers list</h1>
+      </div>
+      <div id="chartrow" class="row">
+        <table id="table"
+			 data-search="true"
+			 data-filter-control="true" 
+			 data-toolbar="#toolbar">
+        </table>
+      </div>
+      <div id="errorrow" class="row m-b">
+        <span id="error" class="label-danger"></span>
+      </div>
+    </div>
+    <script src="{{ url_for('static', filename='toolkit.js') }}"></script>
+    <script src="{{ url_for('static', filename='paperdb.js') }}"></script>
+    <script>
+      var generateURL = '{{ url_for('query_papers') }}';
+
+      $(document).ready(setup);
+    </script>
+  </body>
+</html>
