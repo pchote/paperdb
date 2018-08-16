@@ -1,28 +1,22 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="Papers list.">
     <meta name="author" content="Paul Chote">
     <meta charset="utf-8">
-    <title>Papers list</title>
-    <link href="http://fonts.googleapis.com/css?family=Roboto:300,400,500,700,400italic" rel="stylesheet">
-    <link href="{{ url_for('static', filename='toolkit-inverse.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static', filename='application.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.12.1/bootstrap-table.min.css">
-    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.12.1/bootstrap-table.min.js"></script>
+    <title>Papers list</title>
     <style>
     .tooltip-inner { max-width: 550px; text-align: justify; }
-    .fixed-table-loading { background-color: #252830; padding-top: 7px; }
+    .fixed-table-loading { padding-top: 7px; }
     </style>
   </head>
   <body>
     <div class="container">
-      <div id="toolbar" class="row">
-        <h1>Papers list</h1>
-      </div>
+      <div id="toolbar" class="row"></div>
       <div id="chartrow" class="row">
         <table id="table"
             data-toggle="table"
@@ -45,7 +39,9 @@
         <span id="error" class="label-danger"></span>
       </div>
     </div>
-    <script src="{{ url_for('static', filename='toolkit.js') }}"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.12.1/bootstrap-table.min.js"></script>
     <script src="{{ url_for('static', filename='paperdb.js') }}"></script>
   </body>
 </html>
