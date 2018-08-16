@@ -49,4 +49,8 @@ $(function() {
       html: true,
     });
   });
+
+  $('#table').on('load-error.bs.table', function() {
+    $('#table').bootstrapTable('updateFormatText', 'NoMatches', 'There are no papers to display. Have you logged in?');
+  });
 });
