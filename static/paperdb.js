@@ -20,29 +20,33 @@ function buildlinks(value, row, index) {
   return links.join('<br />');
 }
 
+function buildnames(value, row, index) {
+  if (value instanceof Array)
+    return '<span data-tooltip="true" data-placement="bottom" title="' + value.join('<br />') + '">' + value[0] + (value.length > 1 ? ' et al' : '') + '</span>';
+  return value;
+}
+
+function buildtitle(value, row, index) {
+  return '<span data-tooltip="true" data-placement="bottom" title="' + row['abstract'] + '">' + value + '</span>';
+}
+
+function buildjournal(value, row, index) {
+  if (row['keywords'])
+    return '<span data-tooltip="true" data-placement="bottom" title="' + row['keywords'].split(",").join("<br />") + '">' + value + '</span>';
+  return value;
+}
+
 function multiline(value, row, index) {
   if (value instanceof Array)
     return value.join('<br />');
   return value;
 }
 
-function setup() {
-  $('#table').bootstrapTable({columns: [
-    {field: 'author', title: 'Author', formatter: multiline, sortable: true},
-    {field: 'year', title: 'Year', sortable: true},
-    {field: 'journal', title: 'Journal', sortable: true},
-    {field: 'title', title: 'Title'},
-    {field: 'keywords', title: 'Keywords', formatter: multiline},
-    {field: '', title: 'Links', formatter: buildlinks}
-  ]});
-  $.ajax ({
-    url: generateURL,
-    type: "GET",
-    success: function(data){
-      $('#table').bootstrapTable("load", data);
-    },
-    statusCode: {
-      500: function() { $('#error').html('Failed to query papers'); }
-    }
+$(function() {
+  $('#table').on('post-body.bs.table', function() {
+    $('[data-tooltip="true"]').tooltip({
+      container: "body",
+      html: true,
+    });
   });
-}
+});

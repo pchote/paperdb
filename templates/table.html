@@ -10,9 +10,13 @@
     <link href="http://fonts.googleapis.com/css?family=Roboto:300,400,500,700,400italic" rel="stylesheet">
     <link href="{{ url_for('static', filename='toolkit-inverse.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='application.css') }}" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.11.1/bootstrap-table.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.11.1/bootstrap-table.min.js"></script>
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.12.1/bootstrap-table.min.css">
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.12.1/bootstrap-table.min.js"></script>
+    <style>
+    .tooltip-inner { max-width: 550px; text-align: justify; }
+    .fixed-table-loading { background-color: #252830; padding-top: 7px; }
+    </style>
   </head>
   <body>
     <div class="container">
@@ -21,9 +25,20 @@
       </div>
       <div id="chartrow" class="row">
         <table id="table"
-			 data-search="true"
-			 data-filter-control="true" 
-			 data-toolbar="#toolbar">
+            data-toggle="table"
+            data-search="true"
+            data-filter-control="true" 
+            data-toolbar="#toolbar"
+            data-url="{{ url_for('query_papers') }}">
+          <thead>
+            <tr>
+              <th data-field="author" data-formatter="buildnames" data-sortable="true">Author</th>
+              <th data-field="year" data-sortable="true">Year</th>
+              <th data-field="journal" data-sortable="true" data-formatter="buildjournal">Journal</th>
+              <th data-field="title" data-formatter="buildtitle">Title</th>
+              <th data-formatter="buildlinks">Links</th>
+            </tr>
+          </thead>
         </table>
       </div>
       <div id="errorrow" class="row m-b">
@@ -32,10 +47,5 @@
     </div>
     <script src="{{ url_for('static', filename='toolkit.js') }}"></script>
     <script src="{{ url_for('static', filename='paperdb.js') }}"></script>
-    <script>
-      var generateURL = '{{ url_for('query_papers') }}';
-
-      $(document).ready(setup);
-    </script>
   </body>
 </html>

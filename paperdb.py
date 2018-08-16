@@ -32,7 +32,7 @@ from flask import render_template
 from flask import send_from_directory
 from flask import url_for
 
-BIBTEX_FILE = 'data/papers.bib'
+BIBTEX_FILE = 'data/satellites.bib'
 PDF_DIRECTORY = 'data'
 
 DOI_REGEX = re.compile(r'^http(s)?://(dx\.)?doi.org/.*$')
@@ -132,12 +132,13 @@ def parse_bibtex():
             'author': entry['authors'],
             'year': entry.get('year', ''),
             'journal': entry.get('journal', ''),
-            'keywords': entry.get('keywords', []),
+            'keywords': entry.get('keywords', ''),
             'ads': entry['ads'],
             'url': entry['url'],
             'doi': entry['doi'],
             'arxiv': entry['arxiv'],
             'pdf': entry['pdf'],
+            'abstract': entry.get('abstract', '')
         })
 
     return jsonify(results)
