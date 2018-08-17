@@ -49,6 +49,12 @@ DOI_REGEX = re.compile(r'^http(s)?://(dx\.)?doi.org/.*$')
 ARXIV_REGEX = re.compile('^http(s)?://arxiv.org/abs/.*$')
 ADS_REGEX = re.compile('^http(s)?://adsabs.harvard.edu/abs/.*$')
 
+# Keys to include in the "Minimal BibTeX" field
+MINIMAL_BIBTEX_FIELDS = [
+    'ID', 'ENTRYTYPE', 'author', 'journal', 'month',
+    'pages', 'title', 'volume', 'year', 'eprint', 'doi'
+]
+
 # pylint: disable=too-few-public-methods
 class sqldb(object):
     """Context manager that opens a db and returns a cursor on enter, commits and closes on exit"""
@@ -257,8 +263,6 @@ def process_record(record):
     record = parse_urls(record)
     record = parse_journal(record)
     return record
-
-MINIMAL_BIBTEX_FIELDS = ['ID', 'ENTRYTYPE', 'author', 'journal', 'month', 'pages', 'title', 'volume', 'year', 'eprint', 'doi']
 
 def parse_bibtex():
     """Parses bibtex into json to send to the browser"""

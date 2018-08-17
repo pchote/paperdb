@@ -10,8 +10,10 @@
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.12.1/bootstrap-table.min.css">
     <title>Papers list</title>
     <style>
-    .tooltip-inner { max-width: 550px; text-align: justify; }
-    .fixed-table-loading { padding-top: 7px; }
+      .fixed-table-loading { padding-top: 7px; }
+      .nav-tabs { padding-left: 15px; margin-bottom: 0; border: none; }
+      .tab-content { border: 1px solid #ddd; border-radius: 4px; padding: 15px; }
+      .table-hover tbody tr:hover > td { cursor: pointer; }
     </style>
   </head>
   <body>
@@ -38,21 +40,54 @@
             <tr>
               <th data-field="author" data-formatter="buildnames" data-sortable="true" class="col-md-2">Author</th>
               <th data-field="year" data-sortable="true" class="col-md-1">Year</th>
-              <th data-field="journal" data-sortable="true" data-formatter="buildjournal" class="col-md-2">Journal</th>
-              <th data-field="title" data-sortable="true" data-formatter="buildtitle" class="col-md-5">Title</th>
-              <th data-formatter="buildbuttons" class="col-md-2">Links</th>
+              <th data-field="title" data-sortable="true" data-formatter="buildtitle" class="col-md-6">Title</th>
+              <th data-field="journal" data-sortable="true" class="col-md-3">Journal</th>
             </tr>
           </thead>
         </table>
       </div>
-      <div class="modal" id="bibmodal" tabindex="-1" role="dialog">
+      <div class="modal" id="detailmodal" tabindex="-1" role="dialog">
         <div class="modal-dialog" role="document">
           <div class="modal-content">
-            <div class="modal-body form-group">
-              <label for="bibtex">Minimal BibTeX:</label>
-              <textarea class="form-control input-sm" rows="12" id="bibtex"></textarea>
+            <div class="modal-header">
+              <h4 class="modal-title" id="paper-title">Paper Title</h4>
+            </div>
+            <div class="modal-body">
+              <div class="form-horizontal">
+                <div class="form-group">
+                  <label class="control-label col-sm-2" for="email">Author:</label>
+                  <div class="col-sm-10">
+                    <p class="form-control-static" id="paper-author"></p>
+                  </div>
+                  <label class="control-label col-sm-2" for="email">Journal:</label>
+                  <div class="col-sm-10">
+                    <p class="form-control-static" id="paper-journal"></p>
+                  </div>
+                </div>
+              </div>
+              <ul class="nav nav-tabs">
+                <li class="active"><a data-toggle="tab" href="#abstract">Abstract</a></li>
+                <li><a data-toggle="tab" href="#bibtex">Minimal BibTeX</a></li>
+                <li><a data-toggle="tab" href="#keywords" id="keywords-tab">Keywords</a></li>
+              </ul>
+              <div class="tab-content">
+                <div id="abstract" class="tab-pane active">
+                  <p id="paper-abstract"></p>
+                </div>
+                <div id="bibtex" class="tab-pane">
+                  <textarea class="form-control input-sm" rows="12" id="paper-bibtex"></textarea>
+                </div>
+                <div id="keywords" class="tab-pane">
+                  <p id="paper-keywords"></p>
+                </div>
+              </div>
             </div>
             <div class="modal-footer">
+              <a target="_blank" href="#" class="btn btn-danger pull-left" id="paper-pdf">PDF</a>
+              <a target="_blank" href="#" class="btn btn-warning pull-left" id="paper-ads">ADS</a>
+              <a target="_blank" href="#" class="btn btn-success pull-left" id="paper-doi">DOI</a>
+              <a target="_blank" href="#" class="btn btn-info pull-left" id="paper-arxiv">arXiv</a>
+              <a target="_blank" href="#" class="btn btn-info pull-left" id="paper-web">Web</a>
               <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
           </div>
