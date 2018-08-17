@@ -1,23 +1,26 @@
 var targetData = [];
 
-function buildlinks(value, row, index) {
+function buildbuttons(value, row, index) {
   links = [];
+  if (row['pdf'])
+    links.push('<a href="' + row['pdf'] + '" target="_blank" class="btn btn-danger btn-xs" >PDF</a>');
+
+  if (row['bib'])
+    links.push('<button type="button" class="btn btn-info btn-xs popover-test" data-toggle="modal" data-target="#bibmodal" data-bibentry="' + row['bib'] + '">Bib</button>');
+
   if (row['ads'])
-    links.push('<a href="' + row['ads'] + '" target="_blank">ADS</a>');
+    links.push('<a href="' + row['ads'] + '" target="_blank" class="btn btn-warning btn-xs">ADS</a>');
 
   if (row['doi'])
-    links.push('<a href="' + row['doi'] + '" target="_blank">DOI</a>');
+    links.push('<a href="' + row['doi'] + '" target="_blank" class="btn btn-success btn-xs">DOI</a>');
 
   if (row['arxiv'])
-    links.push('<a href="' + row['arxiv'] + '" target="_blank">arXiv</a>');
+    links.push('<a href="' + row['arxiv'] + '" target="_blank" class="btn btn-info btn-xs">arXiv</a>');
 
   if (row['url'])
-    links.push('<a href="' + row['url'] + '" target="_blank">Web</a>');
+    links.push('<a href="' + row['url'] + '" target="_blank" class="btn btn-info btn-xs">Web</a>');
 
-  if (row['pdf'])
-    links.push('<a href="' + row['pdf'] + '" target="_blank">PDF</a>');
-
-  return links.join('<br />');
+  return links.join('&nbsp;');
 }
 
 function buildnames(value, row, index) {
@@ -52,5 +55,9 @@ $(function() {
 
   $('#table').on('load-error.bs.table', function() {
     $('#table').bootstrapTable('updateFormatText', 'NoMatches', 'There are no papers to display. Have you logged in?');
+  });
+
+  $('#bibmodal').on('show.bs.modal', function (event) {
+    $(this).find('.modal-body textarea').val($(event.relatedTarget).data('bibentry'))
   });
 });

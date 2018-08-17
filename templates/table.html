@@ -36,14 +36,27 @@
             data-url="{{ url_for('query_papers') }}">
           <thead>
             <tr>
-              <th data-field="author" data-formatter="buildnames" data-sortable="true">Author</th>
-              <th data-field="year" data-sortable="true">Year</th>
-              <th data-field="journal" data-sortable="true" data-formatter="buildjournal">Journal</th>
-              <th data-field="title" data-formatter="buildtitle">Title</th>
-              <th data-formatter="buildlinks">Links</th>
+              <th data-field="author" data-formatter="buildnames" data-sortable="true" class="col-md-2">Author</th>
+              <th data-field="year" data-sortable="true" class="col-md-1">Year</th>
+              <th data-field="journal" data-sortable="true" data-formatter="buildjournal" class="col-md-2">Journal</th>
+              <th data-field="title" data-sortable="true" data-formatter="buildtitle" class="col-md-5">Title</th>
+              <th data-formatter="buildbuttons" class="col-md-2">Links</th>
             </tr>
           </thead>
         </table>
+      </div>
+      <div class="modal" id="bibmodal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-body form-group">
+              <label for="bibtex">Minimal BibTeX:</label>
+              <textarea class="form-control input-sm" rows="12" id="bibtex"></textarea>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>

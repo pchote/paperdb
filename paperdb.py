@@ -258,27 +258,32 @@ def process_record(record):
     record = parse_journal(record)
     return record
 
+MINIMAL_BIBTEX_FIELDS = ['ID', 'ENTRYTYPE', 'author', 'journal', 'month', 'pages', 'title', 'volume', 'year', 'eprint', 'doi']
+
 def parse_bibtex():
     """Parses bibtex into json to send to the browser"""
     with open(app.config['BIBTEX_FILE']) as bibtex_file:
         parser = bibtexparser.bparser.BibTexParser(common_strings=True)
-        parser.customization = process_record
         database = parser.parse_file(bibtex_file)
 
     results = []
+    export = bibtexparser.bibdatabase.BibDatabase()
     for entry in database.entries:
+        export.entries = [{key: entry[key] for key in MINIMAL_BIBTEX_FIELDS if key in entry}]
+        processed = process_record(entry)
         results.append({
-            'title': entry.get('title', '').lstrip('{').rstrip('}'),
-            'author': entry['authors'],
-            'year': entry.get('year', ''),
-            'journal': entry.get('journal', ''),
-            'keywords': entry.get('keywords', ''),
-            'ads': entry['ads'],
-            'url': entry['url'],
-            'doi': entry['doi'],
-            'arxiv': entry['arxiv'],
-            'pdf': entry['pdf'],
-            'abstract': entry.get('abstract', '')
+            'title': processed.get('title', '').lstrip('{').rstrip('}'),
+            'author': processed['authors'],
+            'year': processed.get('year', ''),
+            'journal': processed.get('journal', ''),
+            'keywords': processed.get('keywords', ''),
+            'ads': processed['ads'],
+            'url': processed['url'],
+            'doi': processed['doi'],
+            'arxiv': processed['arxiv'],
+            'pdf': processed['pdf'],
+            'bib': bibtexparser.dumps(export).strip(),
+            'abstract': processed.get('abstract', '')
         })
 
     return jsonify(results)
