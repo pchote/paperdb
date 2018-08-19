@@ -51,7 +51,7 @@ ADS_REGEX = re.compile('^http(s)?://adsabs.harvard.edu/abs/.*$')
 
 # Keys to include in the "Minimal BibTeX" field
 MINIMAL_BIBTEX_FIELDS = [
-    'ID', 'ENTRYTYPE', 'author', 'journal', 'month',
+    'ID', 'ENTRYTYPE', 'author', 'journal', 'booktitle', 'month',
     'pages', 'title', 'volume', 'year', 'eprint', 'doi'
 ]
 
@@ -252,6 +252,8 @@ def parse_authors(record):
 def parse_journal(record):
     """Prepares 'journal' keyword as a string"""
     journal = record.get('journal', '').strip()
+    if not journal:
+        journal = record.get('booktitle', '').strip()
     record['journal'] = journal
     return record
 
