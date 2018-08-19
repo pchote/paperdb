@@ -22,7 +22,7 @@ $(function() {
   $('#table').on('click-row.bs.table', function(row, element, field) {
     $('#detailmodal').modal();
     $('#paper-title').text(element.title);
-    $('#paper-author').html(element.author);
+    $('#paper-author').html(element.author.join(' and '));
     $('#paper-journal').html(element.journal);
     $('#paper-year').html(element.year);
     $('#paper-abstract').text(element.abstract);

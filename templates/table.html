@@ -14,6 +14,7 @@
       .nav-tabs { padding-left: 15px; margin-bottom: 0; border: none; }
       .tab-content { border: 1px solid #ddd; border-radius: 4px; padding: 15px; }
       .table-hover tbody tr:hover > td { cursor: pointer; }
+      .paper-panel { height: 250px; overflow-y: scroll; }
     </style>
   </head>
   <body>
@@ -71,18 +72,18 @@
               </div>
               <ul class="nav nav-tabs">
                 <li class="active"><a data-toggle="tab" href="#abstract">Abstract</a></li>
-                <li><a data-toggle="tab" href="#bibtex">Minimal BibTeX</a></li>
+                <li><a data-toggle="tab" href="#bibtex">BibTeX</a></li>
                 <li><a data-toggle="tab" href="#keywords" id="keywords-tab">Keywords</a></li>
               </ul>
               <div class="tab-content">
                 <div id="abstract" class="tab-pane active">
-                  <p id="paper-abstract"></p>
+                  <p id="paper-abstract" class="paper-panel"></p>
                 </div>
                 <div id="bibtex" class="tab-pane">
-                  <textarea class="form-control input-sm" rows="12" id="paper-bibtex"></textarea>
+                  <pre id="paper-bibtex" class="paper-panel"></pre>
                 </div>
                 <div id="keywords" class="tab-pane">
-                  <p id="paper-keywords"></p>
+                  <p id="paper-keywords" class="paper-panel"></p>
                 </div>
               </div>
             </div>
