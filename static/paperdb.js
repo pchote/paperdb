@@ -24,6 +24,7 @@ $(function() {
     $('#paper-title').text(element.title);
     $('#paper-author').html(element.author);
     $('#paper-journal').html(element.journal);
+    $('#paper-year').html(element.year);
     $('#paper-abstract').text(element.abstract);
     $('#paper-bibtex').text(element.bib);
     $('.nav-tabs a:first').tab('show');
