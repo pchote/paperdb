@@ -21,7 +21,7 @@ function bind_paper_button(button, url) {
 function setup(data_url) {
   var table = $('#table').DataTable( {
     ajax: { url: data_url, dataSrc: '' },
-    dom: "<'row'<'col-sm-6'f><'col-sm-6'p>><'row'<'col-sm-12'tr>><'row'<'col-sm-6'l><'col-sm-6'p>>",
+    dom: "<'row'<'col-sm-12 col-md-6'f><'col-sm-12 col-md-6 d-none d-md-block'p>><'row'<'col-sm-12'tr>><'row'<'col-sm-12 col-md-5'l><'col-sm-12 col-md-7'p>>",
     lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
     columns: [
       { data: 'author', width: '17%', render: buildnames },
