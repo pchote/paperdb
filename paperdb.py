@@ -21,7 +21,6 @@ A Flask + Bootstrap + jQuery frontend for a BibDesk paper database
 
 import base64
 import io
-import json
 import os
 import re
 import sqlite3
@@ -83,7 +82,6 @@ required_keys = [
     'SECRET_KEY', # Key used to encrypt cookie data
     'GITHUB_KEY', # Used for OAuth integration
     'GITHUB_SECRET', # Used for OAuth integration
-    'GITHUB_TEAM', # Team ID with permission to view data
     'BIBTEX_FILE', # Path to the bib file to parse
     'PDF_DIRECTORY', # Path to the directory containing PDFs
 ]
@@ -110,21 +108,17 @@ github = oauth.remote_app(
     authorize_url='https://github.com/login/oauth/authorize'
 )
 
-def is_github_team_member(user, team_id):
-    """Queries the GitHub API to check if the given user is a member of the given team."""
-    team = github.get('teams/' + str(team_id) + '/memberships/' + user.data['login']).data
-    return 'state' in team and team['state'] == 'active'
 
 def get_user_account():
     """Queries user account details from the local cache or GitHub API
-       Returns a dictionary with fields:
-          'username': GitHub username (or None if not logged in)
-          'avatar': GitHub profile picture (or None if not logged in)
-          'permissions': list of permission types, a subset of
-                         ['onemetre', 'nites', 'goto', 'rasa', 'infrastructure_log']
+       Returns None if user is not logged in, or a dictionary with fields:
+          'username': GitHub username
+          'github_id': GitHub user ID
+          'permission': True if user has authorization to view the content,
+                        False if the account is not known
     """
     # Expire cached sessions after 12 hours
-    # This forces the permissions to be queried again from github
+    # This forces details to be queried again from github
     try:
         with sqldb(DATABASE_FILE) as cursor:
             sql = 'DELETE FROM sessions WHERE timestamp < Datetime(\'now\', \'-12 hours\')'
@@ -144,11 +138,27 @@ def get_user_account():
         # Check whether we have any cached state
         try:
             with sqldb(DATABASE_FILE) as cursor:
-                sql = 'SELECT data from sessions WHERE github_token = ?'
+                sql = 'SELECT users.github_id, users.username from users, sessions ' + \
+                    'WHERE users.github_id = sessions.github_id ' + \
+                    'AND sessions.github_token = ?'
                 cursor.execute(sql, (session['github_token'],))
-                data = cursor.fetchone()
-                if data:
-                    return json.loads(data[0])
+
+                result = cursor.fetchone()
+                if result:
+                    github_id = result[0]
+                    github_username = result[1]
+
+                    # Cache session state for next time
+                    with sqldb(DATABASE_FILE) as cursor:
+                        query = 'UPDATE users SET last_active = Datetime(\'now\')' + \
+                            ' WHERE github_id = ?'
+                        cursor.execute(query, (github_id,))
+
+                    return {
+                        'username': github_username,
+                        'github_id': github_id,
+                        'permission': True
+                    }
         except Exception:
             print('Failed to query local session data with error')
             traceback.print_exc(file=sys.stdout)
@@ -156,28 +166,46 @@ def get_user_account():
         # Query user data and permissions from GitHub
         try:
             user = github.get('user')
-            data = {
+            github_id = user.data['id']
+
+            # Simultaneously check whether the user is authorized (has a row in the users table)
+            # and update the username / last active time
+            with sqldb(DATABASE_FILE) as cursor:
+                query = 'UPDATE users SET username = ?, last_active = Datetime(\'now\')' + \
+                    ' WHERE github_id = ?'
+                cursor.execute(query, (user.data['login'], github_id))
+
+                # User is not authorized
+                if cursor.rowcount == 0:
+                    print(user.data['login'], 'not authorized')
+
+                    # Make sure stale data is erased
+                    sql = 'DELETE FROM sessions WHERE github_token = ?'
+                    cursor.execute(sql, (session['github_token'],))
+                    session.pop('github_token', None)
+
+                    return {
+                        'username': user.data['login'],
+                        'github_id': github_id,
+                        'permission': False
+                    }
+
+                # Cache session state for next time
+                query = 'REPLACE INTO sessions (github_token, github_id, timestamp)' \
+                    + ' VALUES (?, ?, Datetime(\'now\'))'
+                cursor.execute(query, (session['github_token'], github_id))
+
+            return {
                 'username': user.data['login'],
-                'avatar': user.data['avatar_url'],
-                'permission': is_github_team_member(user, app.config['GITHUB_TEAM'])
+                'github_id': github_id,
+                'permission': True
             }
 
-            # Cache the state for next time
-            with sqldb(DATABASE_FILE) as cursor:
-                query = 'REPLACE INTO sessions (github_token, data, timestamp)' \
-                    + ' VALUES (?, ?, Datetime(\'now\'))'
-                cursor.execute(query, (session['github_token'], json.dumps(data)))
-
-            return data
         except Exception:
             print('Failed to query GitHub API with error')
             traceback.print_exc(file=sys.stdout)
 
-    return {
-        'username': None,
-        'avatar': None,
-        'permission': False
-    }
+    return None
 
 @github.tokengetter
 def get_github_oauth_token():
@@ -322,7 +350,7 @@ def logout():
 def query_papers():
     """Paper table JSON route"""
     user_account = get_user_account()
-    if not user_account['permission']:
+    if not user_account or not user_account['permission']:
         abort(403)
 
     try:
@@ -335,7 +363,7 @@ def query_papers():
 def fetch_pdf(filename):
     """PDF file route"""
     user_account = get_user_account()
-    if not user_account['permission']:
+    if not user_account or not user_account['permission']:
         abort(403)
 
     return send_from_directory(app.config['PDF_DIRECTORY'], filename)

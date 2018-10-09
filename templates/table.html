@@ -21,15 +21,21 @@
     <div class="container">
       <div id="toolbar" class="row">
         <div class="col-md-12">
-    {% if user_account['username'] != None and user_account['avatar'] != None %}
-        <img style="border-radius: 3px; margin-right: 5px; float: left;" src="{{ user_account['avatar'] }}" width="40" height="40">
-        <span style="margin: 0; margin-top: 8px; margin-right: 5px; overflow:hidden; text-overflow: ellipsis; height: 32px; font-weight: bold;">@{{ user_account['username'] }}</span>
-        <a href="{{ url_for('logout') + '?next=' + request.base_url }}" class="btn btn-default btn-sm">Log out</a>
-    {% else %}
-        <a id="login-button" href="{{ url_for('login') + '?next=' + request.base_url }}" class="btn btn-primary" style="width: 150px; overflow: hidden; text-overflow: ellipsis;">Log in with Github</a>
-    {% endif %}
+        {% if user_account != None and user_account['permission'] %}
+          <img style="border-radius: 3px; margin-right: 5px; float: left;" src="https://avatars1.githubusercontent.com/u/{{ user_account['github_id'] }}?v=4" width="40" height="40">
+          <span style="margin: 0; margin-top: 8px; margin-right: 5px; overflow:hidden; text-overflow: ellipsis; height: 32px; font-weight: bold;">@{{ user_account['username'] }}</span>
+          <a href="{{ url_for('logout') + '?next=' + request.base_url }}" class="btn btn-default btn-sm">Log out</a>
+        {% else %}
+          <a id="login-button" href="{{ url_for('login') + '?next=' + request.base_url }}" class="btn btn-primary" style="width: 150px; overflow: hidden; text-overflow: ellipsis;">Log in with Github</a>
+        {% endif %}
+        {% if user_account != None and not user_account['permission'] %}
+          <span class="label label-danger">
+            <strong>Login failed:</strong> @{{ user_account['username'] }} is not authorized to view this content.
+          </span>
+        {% endif %}
         </div>
       </div>
+
       <div id="chartrow" class="row">
         <table id="table"
             data-toggle="table"
