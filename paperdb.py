@@ -29,7 +29,7 @@ import traceback
 import bibtexparser
 
 from bibtexparser.customization import getnames, convert_to_unicode
-from biplist import PlistReader
+import biplist
 
 from flask import abort
 from flask import Flask
@@ -57,6 +57,7 @@ MINIMAL_BIBTEX_FIELDS = [
     'pages', 'title', 'volume', 'year', 'eprint', 'doi'
 ]
 
+
 # pylint: disable=too-few-public-methods
 class sqldb(object):
     """Context manager that opens a db and returns a cursor on enter, commits and closes on exit"""
@@ -73,6 +74,7 @@ class sqldb(object):
         self.connection.close()
 # pylint: enable=too-few-public-methods
 
+
 app = Flask(__name__)
 
 # Read config data from the database
@@ -82,11 +84,11 @@ with sqldb(DATABASE_FILE) as conf:
 
 missing_keys = False
 required_keys = [
-    'SECRET_KEY', # Key used to encrypt cookie data
-    'GITHUB_KEY', # Used for OAuth integration
-    'GITHUB_SECRET', # Used for OAuth integration
-    'BIBTEX_FILE', # Path to the bib file to parse
-    'PDF_DIRECTORY', # Path to the directory containing PDFs
+    'SECRET_KEY',     # Key used to encrypt cookie data
+    'GITHUB_KEY',     # Used for OAuth integration
+    'GITHUB_SECRET',  # Used for OAuth integration
+    'BIBTEX_FILE',    # Path to the bib file to parse
+    'PDF_DIRECTORY',  # Path to the directory containing PDFs
 ]
 
 for k in required_keys:
@@ -152,10 +154,9 @@ def get_user_account():
                     github_username = result[1]
 
                     # Cache session state for next time
-                    with sqldb(DATABASE_FILE) as cursor:
-                        query = 'UPDATE users SET last_active = Datetime(\'now\')' + \
-                            ' WHERE github_id = ?'
-                        cursor.execute(query, (github_id,))
+                    query = 'UPDATE users SET last_active = Datetime(\'now\')' + \
+                        ' WHERE github_id = ?'
+                    cursor.execute(query, (github_id,))
 
                     return {
                         'username': github_username,
@@ -210,11 +211,13 @@ def get_user_account():
 
     return None
 
+
 @github.tokengetter
 def get_github_oauth_token():
     """Fetch the github oauth token.
        Used internally by the OAuth API"""
-    return (session.get('github_token'), '')
+    return session.get('github_token'), ''
+
 
 def parse_pdf(record):
     """Prepares 'pdf' field as a relative URL to the fetch_pdf endpoint."""
@@ -223,7 +226,7 @@ def parse_pdf(record):
     while True:
         b64_plist_data = record.get('bdsk-file-' + str(idx), '')
         if b64_plist_data:
-            plist = PlistReader(io.BytesIO(base64.b64decode(b64_plist_data)))
+            plist = biplist.PlistReader(io.BytesIO(base64.b64decode(b64_plist_data)))
             filename = plist.parse()['$objects'][4]
             if os.path.exists(os.path.join(app.config['PDF_DIRECTORY'], filename)):
                 record['pdf'] = url_for('fetch_pdf', filename=filename)
@@ -231,6 +234,7 @@ def parse_pdf(record):
         else:
             break
     return record
+
 
 def parse_urls(record):
     """Prepares 'ads', 'doi', 'arxiv', 'url' fields as absolute URLs to external sites."""
@@ -266,10 +270,12 @@ def parse_urls(record):
             break
     return record
 
+
 def __clean_names(names):
     """Replaced problematic latex characters in an author name"""
     for n in names:
         yield n.replace('{', '').replace('}', '').replace('~', '&nbsp;').replace(' ', '&nbsp;')
+
 
 def parse_authors(record):
     """Prepares 'authors' field as a list of author names (last, initials)"""
@@ -280,6 +286,7 @@ def parse_authors(record):
         record['authors'] = list(__clean_names(getnames([i.strip() for i in split])))
     return record
 
+
 def parse_journal(record):
     """Prepares 'journal' keyword as a string"""
     journal = record.get('journal', '').strip()
@@ -287,6 +294,7 @@ def parse_journal(record):
         journal = record.get('booktitle', '').strip()
     record['journal'] = journal
     return record
+
 
 def process_record(record):
     """Generate custom record keys to be sent to the browser"""
@@ -296,6 +304,7 @@ def process_record(record):
     record = parse_urls(record)
     record = parse_journal(record)
     return record
+
 
 def parse_bibtex():
     """Parses bibtex into json to send to the browser"""
@@ -325,6 +334,7 @@ def parse_bibtex():
 
     return jsonify(results)
 
+
 @app.route('/')
 def input_display():
     """Main page route"""
@@ -333,6 +343,7 @@ def input_display():
                            page_title=PAGE_TITLE,
                            page_description=PAGE_DESCRIPTION,
                            page_author=PAGE_AUTHOR)
+
 
 @app.route('/login')
 def login():
@@ -343,6 +354,7 @@ def login():
 
     return github.authorize(callback=callback)
 
+
 @app.route('/logout')
 def logout():
     """Logout route"""
@@ -352,6 +364,7 @@ def logout():
         with sqldb(DATABASE_FILE) as cursor:
             cursor.execute('DELETE FROM sessions WHERE github_token = ?', (token,))
     return redirect(next_page)
+
 
 @app.route('/query')
 def query_papers():
@@ -365,6 +378,7 @@ def query_papers():
     except Exception:
         traceback.print_exc(file=sys.stdout)
         abort(500)
+
 
 @app.route('/pdf/<path:filename>')
 def fetch_pdf(filename):
