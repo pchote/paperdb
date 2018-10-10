@@ -3,12 +3,12 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="SSA/Debris papers">
-    <meta name="author" content="Paul Chote">
+    <meta name="description" content="{{ page_description }}">
+    <meta name="author" content="{{ page_author }}">
     <meta charset="utf-8">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/dt-1.10.18/r-2.2.2/datatables.min.css"/>
-    <title>SSA/Debris papers</title>
+    <title>{{ page_title }}</title>
     <style>
       .nav-tabs { padding-left: 15px; margin-bottom: 0; border: none; }
       .tab-content { border: 1px solid #ddd; border-radius: 4px; padding: 15px; }
@@ -19,7 +19,7 @@
   </head>
   <body>
     <nav class="navbar navbar-light bg-light">
-      <span class="navbar-brand mb-0 h1">SSA/Debris papers</span>
+      <span class="navbar-brand mb-0 h1">{{ page_title }}</span>
       <div>
       {% if user_account != None and user_account['permission'] %}
         <img class="navbar-left d-align-block align-top rounded" src="https://avatars1.githubusercontent.com/u/{{ user_account['github_id'] }}?v=4" width="40" height="40">

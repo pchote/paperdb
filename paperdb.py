@@ -43,6 +43,9 @@ from flask import url_for
 from flask_oauthlib.client import OAuth
 
 DATABASE_FILE = 'paperdb.db'
+PAGE_TITLE = 'SSA/Debris papers'
+PAGE_DESCRIPTION = PAGE_TITLE
+PAGE_AUTHOR = 'Paul Chote'
 
 DOI_REGEX = re.compile(r'^http(s)?://(dx\.)?doi.org/.*$')
 ARXIV_REGEX = re.compile('^http(s)?://arxiv.org/abs/.*$')
@@ -325,7 +328,11 @@ def parse_bibtex():
 @app.route('/')
 def input_display():
     """Main page route"""
-    return render_template('table.html', user_account=get_user_account())
+    return render_template('table.html',
+                           user_account=get_user_account(),
+                           page_title=PAGE_TITLE,
+                           page_description=PAGE_DESCRIPTION,
+                           page_author=PAGE_AUTHOR)
 
 @app.route('/login')
 def login():
