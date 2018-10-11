@@ -42,11 +42,6 @@ from flask import session
 from flask import url_for
 from flask_oauthlib.client import OAuth
 
-DATABASE_FILE = 'paperdb.db'
-PAGE_TITLE = 'SSA/Debris papers'
-PAGE_DESCRIPTION = PAGE_TITLE
-PAGE_AUTHOR = 'Paul Chote'
-
 DOI_REGEX = re.compile(r'^http(s)?://(dx\.)?doi.org/.*$')
 ARXIV_REGEX = re.compile('^http(s)?://arxiv.org/abs/.*$')
 ADS_REGEX = re.compile('^http(s)?://adsabs.harvard.edu/abs/.*$')
@@ -61,12 +56,16 @@ MINIMAL_BIBTEX_FIELDS = [
 # pylint: disable=too-few-public-methods
 class sqldb(object):
     """Context manager that opens a db and returns a cursor on enter, commits and closes on exit"""
-    def __init__(self, dbfile):
+    def __init__(self, dbfile, create_if_missing=False):
         self.dbfile = dbfile
+        self._create_if_missing = create_if_missing
         self.connection = None
 
     def __enter__(self):
-        self.connection = sqlite3.connect(self.dbfile)
+        if self._create_if_missing:
+            self.connection = sqlite3.connect(self.dbfile)
+        else:
+            self.connection = sqlite3.connect('file:{0}?mode=rw'.format(self.dbfile), uri=True)
         return self.connection.cursor()
 
     def __exit__(self, exc_class, exc, tb):
@@ -74,44 +73,37 @@ class sqldb(object):
         self.connection.close()
 # pylint: enable=too-few-public-methods
 
-
 app = Flask(__name__)
-
-# Read config data from the database
-with sqldb(DATABASE_FILE) as conf:
-    for row in conf.execute('SELECT keyname, value from config'):
-        app.config[row[0]] = row[1]
-
-missing_keys = False
-required_keys = [
-    'SECRET_KEY',     # Key used to encrypt cookie data
-    'GITHUB_KEY',     # Used for OAuth integration
-    'GITHUB_SECRET',  # Used for OAuth integration
-    'BIBTEX_FILE',    # Path to the bib file to parse
-    'PDF_DIRECTORY',  # Path to the directory containing PDFs
-]
-
-for k in required_keys:
-    if k not in app.config:
-        missing_keys = True
-        sys.stderr.write('Config key `' + k + '` is not defined in the database config table\n')
-
-if missing_keys:
-    sys.exit(1)
-
-# Use github's OAuth interface for verifying user identity
+app.config.from_object('config.PaperDBConfig')
 oauth = OAuth(app)
 github = oauth.remote_app(
     'github',
-    consumer_key=app.config['GITHUB_KEY'],
-    consumer_secret=app.config['GITHUB_SECRET'],
-    request_token_params={'scope': 'read:org'},
+    consumer_key=app.config['GITHUB_CLIENT_ID'],
+    consumer_secret=app.config['GITHUB_CLIENT_SECRET'],
     base_url='https://api.github.com/',
     request_token_url=None,
     access_token_method='POST',
     access_token_url='https://github.com/login/oauth/access_token',
     authorize_url='https://github.com/login/oauth/authorize'
 )
+
+# Create database with default schema if missing
+try:
+    with sqldb(app.config['DATABASE_PATH']) as _:
+        pass
+
+except sqlite3.OperationalError:
+    with sqldb(app.config['DATABASE_PATH'], create_if_missing=True) as create:
+        create.execute('CREATE TABLE sessions (' + \
+                       'github_token varchar(40) unique, ' + \
+                       'github_id integer, ' + \
+                       'timestamp integer);')
+        create.execute('CREATE TABLE users(' + \
+                       'github_id INTEGER PRIMARY KEY, ' + \
+                       'username TEXT, ' + \
+                       'last_active integer default 0);')
+        create.execute('INSERT INTO users (github_id) VALUES (?);',
+                       (app.config['GITHUB_FOUNDER_ID'],))
 
 
 def get_user_account():
@@ -125,7 +117,7 @@ def get_user_account():
     # Expire cached sessions after 12 hours
     # This forces details to be queried again from github
     try:
-        with sqldb(DATABASE_FILE) as cursor:
+        with sqldb(app.config['DATABASE_PATH']) as cursor:
             sql = 'DELETE FROM sessions WHERE timestamp < Datetime(\'now\', \'-12 hours\')'
             cursor.execute(sql)
     except Exception:
@@ -142,7 +134,7 @@ def get_user_account():
     if 'github_token' in session:
         # Check whether we have any cached state
         try:
-            with sqldb(DATABASE_FILE) as cursor:
+            with sqldb(app.config['DATABASE_PATH']) as cursor:
                 sql = 'SELECT users.github_id, users.username from users, sessions ' + \
                     'WHERE users.github_id = sessions.github_id ' + \
                     'AND sessions.github_token = ?'
@@ -174,7 +166,7 @@ def get_user_account():
 
             # Simultaneously check whether the user is authorized (has a row in the users table)
             # and update the username / last active time
-            with sqldb(DATABASE_FILE) as cursor:
+            with sqldb(app.config['DATABASE_PATH']) as cursor:
                 query = 'UPDATE users SET username = ?, last_active = Datetime(\'now\')' + \
                     ' WHERE github_id = ?'
                 cursor.execute(query, (user.data['login'], github_id))
@@ -228,7 +220,7 @@ def parse_pdf(record):
         if b64_plist_data:
             plist = biplist.PlistReader(io.BytesIO(base64.b64decode(b64_plist_data)))
             filename = plist.parse()['$objects'][4]
-            if os.path.exists(os.path.join(app.config['PDF_DIRECTORY'], filename)):
+            if os.path.exists(os.path.join(app.config['PDF_PATH'], filename)):
                 record['pdf'] = url_for('fetch_pdf', filename=filename)
             idx += 1
         else:
@@ -308,7 +300,7 @@ def process_record(record):
 
 def parse_bibtex():
     """Parses bibtex into json to send to the browser"""
-    with open(app.config['BIBTEX_FILE']) as bibtex_file:
+    with open(app.config['BIBTEX_PATH']) as bibtex_file:
         parser = bibtexparser.bparser.BibTexParser(common_strings=True)
         database = parser.parse_file(bibtex_file)
 
@@ -340,9 +332,7 @@ def input_display():
     """Main page route"""
     return render_template('table.html',
                            user_account=get_user_account(),
-                           page_title=PAGE_TITLE,
-                           page_description=PAGE_DESCRIPTION,
-                           page_author=PAGE_AUTHOR)
+                           page_title=app.config['PAGE_TITLE'])
 
 
 @app.route('/login')
@@ -361,7 +351,7 @@ def logout():
     next_page = request.args['next'] if 'next' in request.args else url_for('input_display')
     token = session.pop('github_token', None)
     if token:
-        with sqldb(DATABASE_FILE) as cursor:
+        with sqldb(app.config['DATABASE_PATH']) as cursor:
             cursor.execute('DELETE FROM sessions WHERE github_token = ?', (token,))
     return redirect(next_page)
 
@@ -387,4 +377,4 @@ def fetch_pdf(filename):
     if not user_account or not user_account['permission']:
         abort(403)
 
-    return send_from_directory(app.config['PDF_DIRECTORY'], filename)
+    return send_from_directory(app.config['PDF_PATH'], filename)
