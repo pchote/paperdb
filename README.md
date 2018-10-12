@@ -13,6 +13,22 @@ $> cp config.default.py config.py
 
 Edit the config.py file and include the following information
 
+## BibTex File
+
+Add the path to the BibTex file to be served, e.g:
+
+```sh
+BIBTEX_PATH = 'data/papers.bib' 
+```
+
+## PDF Folder
+
+Add the file where the PDFs live, e.g:
+
+```sh
+PDF_PATH = 'data'
+```
+
 ## Secret Key
 
 Generate a secret key using
