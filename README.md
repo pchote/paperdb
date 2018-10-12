@@ -1,4 +1,6 @@
-A Flask + Bootstrap + jQuery frontend for a BibDesk paper database
+# Paperdb
+
+A Flask, Bootstrap & jQuery frontend for a BibDesk paper database
 
 # Installation
 
