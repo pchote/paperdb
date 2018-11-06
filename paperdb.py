@@ -219,8 +219,14 @@ def parse_pdf(record):
         b64_plist_data = record.get('bdsk-file-' + str(idx), '')
         if b64_plist_data:
             plist = biplist.PlistReader(io.BytesIO(base64.b64decode(b64_plist_data)))
-            filename = plist.parse()['$objects'][4]
-            if os.path.exists(os.path.join(app.config['PDF_PATH'], filename)):
+            data = plist.parse()
+            filename = None
+            if 'relativePath' in data:
+                filename = data['relativePath']
+            elif '$objects' in data:
+                filename = data['$objects'][4]
+
+            if filename and os.path.exists(os.path.join(app.config['PDF_PATH'], filename)):
                 record['pdf'] = url_for('fetch_pdf', filename=filename)
             idx += 1
         else:
