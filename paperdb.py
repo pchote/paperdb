@@ -40,7 +40,7 @@ from flask import request
 from flask import send_from_directory
 from flask import session
 from flask import url_for
-from flask_oauthlib.client import OAuth
+from flask_github import GitHub
 
 DOI_REGEX = re.compile(r'^http(s)?://(dx\.)?doi.org/.*$')
 ARXIV_REGEX = re.compile('^http(s)?://arxiv.org/abs/.*$')
@@ -73,19 +73,12 @@ class sqldb(object):
         self.connection.close()
 # pylint: enable=too-few-public-methods
 
+
 app = Flask(__name__)
 app.config.from_object('config.PaperDBConfig')
-oauth = OAuth(app)
-github = oauth.remote_app(
-    'github',
-    consumer_key=app.config['GITHUB_CLIENT_ID'],
-    consumer_secret=app.config['GITHUB_CLIENT_SECRET'],
-    base_url='https://api.github.com/',
-    request_token_url=None,
-    access_token_method='POST',
-    access_token_url='https://github.com/login/oauth/access_token',
-    authorize_url='https://github.com/login/oauth/authorize'
-)
+
+
+github = GitHub(app)
 
 # Create database with default schema if missing
 try:
@@ -94,13 +87,13 @@ try:
 
 except sqlite3.OperationalError:
     with sqldb(app.config['DATABASE_PATH'], create_if_missing=True) as create:
-        create.execute('CREATE TABLE sessions (' + \
-                       'github_token varchar(40) unique, ' + \
-                       'github_id integer, ' + \
+        create.execute('CREATE TABLE sessions (' +
+                       'github_token varchar(40) unique, ' +
+                       'github_id integer, ' +
                        'timestamp integer);')
-        create.execute('CREATE TABLE users(' + \
-                       'github_id INTEGER PRIMARY KEY, ' + \
-                       'username TEXT, ' + \
+        create.execute('CREATE TABLE users(' +
+                       'github_id INTEGER PRIMARY KEY, ' +
+                       'username TEXT, ' +
                        'last_active integer default 0);')
         create.execute('INSERT INTO users (github_id) VALUES (?);',
                        (app.config['GITHUB_FOUNDER_ID'],))
@@ -123,12 +116,6 @@ def get_user_account():
     except Exception:
         print('Failed to clean expired session data with error')
         traceback.print_exc(file=sys.stdout)
-
-    # Check whether we have received a callback argument from a login attempt
-    if 'code' in request.args:
-        resp = github.authorized_response()
-        if resp is not None and 'access_token' in resp:
-            session['github_token'] = resp['access_token']
 
     # Logged in users store an encrypted version of their github token in the session cookie
     if 'github_token' in session:
@@ -162,26 +149,25 @@ def get_user_account():
         # Query user data and permissions from GitHub
         try:
             user = github.get('user')
-            github_id = user.data['id']
+            github_id = user['id']
 
             # Simultaneously check whether the user is authorized (has a row in the users table)
             # and update the username / last active time
             with sqldb(app.config['DATABASE_PATH']) as cursor:
                 query = 'UPDATE users SET username = ?, last_active = Datetime(\'now\')' + \
                     ' WHERE github_id = ?'
-                cursor.execute(query, (user.data['login'], github_id))
+                print(query, (user['login'], github_id))
+                cursor.execute(query, (user['login'], github_id))
 
                 # User is not authorized
                 if cursor.rowcount == 0:
-                    print(user.data['login'], 'not authorized')
-
                     # Make sure stale data is erased
                     sql = 'DELETE FROM sessions WHERE github_token = ?'
                     cursor.execute(sql, (session['github_token'],))
                     session.pop('github_token', None)
 
                     return {
-                        'username': user.data['login'],
+                        'username': user['login'],
                         'github_id': github_id,
                         'permission': False
                     }
@@ -192,7 +178,7 @@ def get_user_account():
                 cursor.execute(query, (session['github_token'], github_id))
 
             return {
-                'username': user.data['login'],
+                'username': user['login'],
                 'github_id': github_id,
                 'permission': True
             }
@@ -204,11 +190,22 @@ def get_user_account():
     return None
 
 
-@github.tokengetter
+@github.access_token_getter
 def get_github_oauth_token():
     """Fetch the github oauth token.
        Used internally by the OAuth API"""
-    return session.get('github_token'), ''
+    return session.get('github_token')
+
+
+@app.route('/login-callback')
+@github.authorized_handler
+def authorized(oauth_token):
+    """Callback from the OAuth API to set the session token"""
+    next_url = request.args.get('next') or url_for('input_display')
+    if oauth_token:
+        session['github_token'] = oauth_token
+
+    return redirect(next_url)
 
 
 def parse_pdf(record):
@@ -344,11 +341,7 @@ def input_display():
 @app.route('/login')
 def login():
     """Login route"""
-    callback = url_for('input_display', _external=True)
-    if 'next' in request.args:
-        callback = request.args['next']
-
-    return github.authorize(callback=callback)
+    return github.authorize()
 
 
 @app.route('/logout')
