@@ -3,10 +3,10 @@ Description=uWSGI server for papers database
 After=network.target
 
 [Service]
-User=nginx
+User={{USER}}
 Group=nginx
-WorkingDirectory={{PROJECT_DIR}}}
-ExecStart=/usr/sbin/uwsgi --ini paperdb.ini
+WorkingDirectory={{PROJECT_DIR}}
+ExecStart=/usr/local/bin/uwsgi --ini paperdb.ini
 ExecReload=/bin/kill -HUP $MAINPID
 KillSignal=SIGINT
 

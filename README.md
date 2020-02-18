@@ -6,4 +6,4 @@ export FLASK_APP=paperdb
 FLASK_APP=paperdb python36 -m flask run
 ```
 
-See [Install Notes](INSTALL.md) for CentOS 7.
+See [Install Notes](INSTALL.md) for CentOS 8.
