@@ -74,7 +74,7 @@ Determine your GitHub user ID. This is the ```id``` value from ```https://api.gi
 Enter the ```id``` value into ```config.py```
 
 ```sh
-GITHUB_FOUNDER_ID = 1912007
+GITHUB_FOUNDER_ID = 1234567
 ```
 
 # Usage
