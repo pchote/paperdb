@@ -1,0 +1,14 @@
+[Unit]
+Description=uWSGI server for papers database
+After=network.target
+
+[Service]
+User={{USER}}
+Group=nginx
+WorkingDirectory={{PROJECT_DIR}}
+ExecStart=/usr/local/bin/uwsgi --ini paperdb.ini
+ExecReload=/bin/kill -HUP $MAINPID
+KillSignal=SIGINT
+
+[Install]
+WantedBy=multi-user.target

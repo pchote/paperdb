@@ -82,10 +82,11 @@ GITHUB_FOUNDER_ID = 1912007
 Run the paper database server locally using:
 ```
 export FLASK_APP=paperdb
-python -m flask run
+FLASK_APP=paperdb python36 -m flask run
 ```
 
 # Contributors
 
 
 # License
+See [Install Notes](INSTALL.md) for CentOS 8.
